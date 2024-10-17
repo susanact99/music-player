@@ -13,8 +13,8 @@ const initialState = {
   playNextAutomatically: false,
   isLooping: false,
   isShuffled: false,
-  currentTime: 0,     // Nuevo: tiempo transcurrido
-  totalTime: 0        // Nuevo: duración total de la canción
+  currentTime: 0,
+  totalTime: 0
 };
 
 const reducer = (state, action) => {
@@ -38,9 +38,9 @@ const reducer = (state, action) => {
     case 'TOGGLE_SHUFFLE':
       return { ...state, isShuffled: !state.isShuffled };
     case 'SET_CURRENT_TIME':
-      return { ...state, currentTime: action.payload }; // Nuevo caso para tiempo transcurrido
+      return { ...state, currentTime: action.payload };
     case 'SET_TOTAL_TIME':
-      return { ...state, totalTime: action.payload };  // Nuevo caso para duración total
+      return { ...state, totalTime: action.payload };
     default:
       return state;
   }
@@ -54,20 +54,17 @@ const formatTime = (seconds) => {
 
 const App = () => {
   const [state, dispatch] = useReducer(reducer, initialState);
-  const audioPlayer = useRef(null);
-
   const { songs, songTitles, currentSongIndex, currentSong, isPlaying, volume, progress, playNextAutomatically, isLooping, isShuffled, currentTime, totalTime } = state;
 
   useEffect(() => {
     if (currentSong) {
-      // Establecer la duración total cuando comienza una nueva canción
       dispatch({ type: 'SET_TOTAL_TIME', payload: currentSong.duration() });
 
       const interval = setInterval(() => {
         const seek = currentSong.seek();
         const duration = currentSong.duration();
         dispatch({ type: 'SET_PROGRESS', payload: (seek / duration) * 100 });
-        dispatch({ type: 'SET_CURRENT_TIME', payload: seek }); // Actualiza el tiempo transcurrido
+        dispatch({ type: 'SET_CURRENT_TIME', payload: seek });
       }, 1000);
 
       return () => clearInterval(interval);
@@ -106,8 +103,10 @@ const App = () => {
     dispatch({ type: 'TOGGLE_PLAY' });
   };
 
-  const handleVolumeChange = (e) => {
-    const newVolume = parseFloat(e.target.value);
+  const handleVolumeClick = (e) => {
+    const volumeBarWidth = e.target.clientWidth;
+    const offsetX = e.nativeEvent.offsetX;
+    const newVolume = offsetX / volumeBarWidth;
     dispatch({ type: 'SET_VOLUME', payload: newVolume });
     if (currentSong) {
       currentSong.volume(newVolume);
@@ -116,16 +115,18 @@ const App = () => {
 
   const getVolumeIcon = () => {
     if (volume === 0) {
-      return "bi bi-volume-mute"; 
+      return "bi bi-volume-mute";
     } else if (volume > 0 && volume <= 0.5) {
-      return "bi bi-volume-down"; 
+      return "bi bi-volume-down";
     } else {
-      return "bi bi-volume-up"; 
+      return "bi bi-volume-up";
     }
   };
 
-  const handleProgressChange = (e) => {
-    const newProgress = parseFloat(e.target.value);
+  const handleProgressClick = (e) => {
+    const progressBarWidth = e.target.clientWidth;
+    const offsetX = e.nativeEvent.offsetX;
+    const newProgress = (offsetX / progressBarWidth) * 100;
     dispatch({ type: 'SET_PROGRESS', payload: newProgress });
     if (currentSong) {
       const duration = currentSong.duration();
@@ -148,8 +149,8 @@ const App = () => {
     if (isShuffled) {
       nextIndex = Math.floor(Math.random() * songs.length);
     } else if (isLooping) {
-      nextIndex = currentSongIndex
-    }else {
+      nextIndex = currentSongIndex;
+    } else {
       nextIndex = nextIndex % songs.length;
     }
     playSong(nextIndex);
@@ -162,62 +163,62 @@ const App = () => {
 
   return (
     <div className="player-container">
-      <h1>Reproductor de Música</h1>
+      <h1>MyMusic💚🎧</h1>
       <h2 className="current-song-title">{songTitles[currentSongIndex]}</h2>
-  
+
+      <div className="progress-bar" onClick={handleProgressClick}>
+        <div className="progress-element">
+          <div className="progress-level" style={{ width: `${progress}%` }}></div>
+        </div>
+        <div className="time-display">
+          <span>{formatTime(currentTime)}</span>
+          <span>{formatTime(totalTime)}</span>
+        </div>
+      </div>
       <div className="controls">
         <button onClick={handlePreviousSong}><i className="bi bi-rewind-fill"></i></button>
         <button onClick={handlePausePlay}>{isPlaying ? <i className="bi bi-pause-fill"></i> : <i className="bi bi-play-fill"></i>}</button>
         <button onClick={handleNextSong}><i className="bi bi-fast-forward-fill"></i></button>
       </div>
-  
-      <div className="progress-bar">
-        <input
-          type="range"
-          value={progress}
-          onChange={handleProgressChange}
-          min="0"
-          max="100"
-          step="1"
-          className='mi-range'
-        />
-        <div className="time-display">
-          <span>{formatTime(currentTime)}</span> {/* Tiempo transcurrido */}
-          <span>{formatTime(totalTime)}</span>   {/* Duración total */}
-        </div>
-      </div>
-  
       <div className="settings-volume">
-        <div className="volume-control">
+        <div className="volume-control" onClick={handleVolumeClick}>
           <label><i className={getVolumeIcon()}></i></label>
-          <input
-            type="range"
-            value={volume}
-            className='volume-input'
-            onChange={handleVolumeChange}
-            min="0"
-            max="1"
-            step="0.01"
-          />
+          <div className="volume-bar">
+            <div className="volume-level" style={{ width: `${volume * 100}%` }}></div>
+          </div>
         </div>
-  
+
+        
+
         <div className="settings-buttons">
           <button onClick={() => dispatch({ type: 'TOGGLE_AUTOPLAY' })}>
-            {playNextAutomatically ? <i className="bi bi-arrow-left-right"></i> : <i className="bi bi-arrow-left-right"></i>}
+            <i className="bi bi-arrow-left-right"></i>
           </button>
           <button onClick={() => dispatch({ type: 'TOGGLE_LOOP' })}>
-            {isLooping ? <i className="bi bi-arrow-counterclockwise"></i> : <i className="bi bi-arrow-counterclockwise"></i>}
+            <i className="bi bi-arrow-counterclockwise"></i>
           </button>
           <button onClick={() => dispatch({ type: 'TOGGLE_SHUFFLE' })}>
-            {isShuffled ? <i className="bi bi-shuffle"></i> : <i className="bi bi-shuffle"></i>}
+            <i className="bi bi-shuffle"></i>
           </button>
         </div>
       </div>
-  
+
+      <div className="file-upload">
+      <label htmlFor="song-upload" className="file-upload-label">Upload Songs</label>
+        <input
+          id="song-upload"
+          type="file"
+          accept="audio/*"
+          onChange={handleFileUpload}
+          style={{ display: 'none' }}
+          multiple
+        />
+      </div>
+
       <ul>
         {songTitles.map((title, index) => (
           <li key={index}>
-            <button 
+            <button
               onClick={() => playSong(index)}
               className={currentSongIndex === index ? 'active' : ''}
             >
@@ -226,12 +227,9 @@ const App = () => {
           </li>
         ))}
       </ul>
-  
-      <div className="file-upload">
-        <input type="file" multiple accept="audio/*" onChange={handleFileUpload} />
-      </div>
+
     </div>
-  );  
+  );
 };
 
 export default App;
