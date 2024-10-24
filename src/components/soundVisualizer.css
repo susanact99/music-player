@@ -1,3 +1,4 @@
+
 /* Estilos para el Visualizador de Sonido */
 .sound-visualizer {
     width: 100%;
@@ -14,13 +15,14 @@
     background-color: #1db954; /* Verde Spotify */
     margin: 0 2px;
     transition: height 0.1s ease;
-    border-radius: 3px; /* Bordes redondeados para un diseño suave */
+    border-radius: 10px; /* Bordes redondeados para un diseño suave */
   }
   
   /* Efecto visual cuando hay sonido */
   .sound-bar.active {
     background-color: #1db954;
-    box-shadow: 0 0 8px rgba(29, 185, 84, 0.6); /* Efecto de resplandor */
+    box-shadow: 0 0 8px rgba(29, 185, 84, 0.6);
+    
   }
   
   /* Efecto visual cuando no hay sonido o barras bajas */

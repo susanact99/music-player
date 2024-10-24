@@ -12,6 +12,7 @@ const App = () => {
     handleFileUpload,
     handleNextSong,
     handlePreviousSong,
+    handleRemoveSong, // Asegúrate de incluir la nueva función aquí
     getAudioData,
   } = useMusicPlayer();
 
@@ -64,7 +65,7 @@ const App = () => {
 
   return (
     <div className="player-container">
-      <h1>MyMusic💚🎧</h1>
+      <h2 className='roboto-regular'>MyMusic <img src="./src/assets/LOGO.webp" alt="music logo" /></h2>
 
       {/* Título de la canción */}
       <h2 className="current-song-title">{songTitles[currentSongIndex]}</h2>
@@ -72,7 +73,6 @@ const App = () => {
       <div className='visualizer'>
         <SoundVisualizer getAudioData={getAudioData} />
       </div>
-
 
       {/* Barra de progreso */}
       <div className="progress-bar" onClick={handleProgressClick}>
@@ -118,7 +118,7 @@ const App = () => {
 
       {/* Subida de archivos */}
       <div className="file-upload">
-        <label htmlFor="song-upload" className="file-upload-label">Upload Songs</label>
+        <label htmlFor="song-upload" className="file-upload-label">Upload Songs <i className="bi bi-folder2-open"></i></label>
         <input
           id="song-upload"
           type="file"
@@ -133,12 +133,18 @@ const App = () => {
       <ul>
         {songTitles.map((title, index) => (
           <li key={index}>
-            <button
-              onClick={() => playSong(index)}
+            <div
               className={currentSongIndex === index ? 'active' : ''}
             >
-              {`Reproducir: ${title}`}
-            </button>
+              <button onClick={() => playSong(index)}>
+                {`Reproducir: ${title}`}
+              </button>
+
+              <button className='delete-song' onClick={() => handleRemoveSong(index)}>
+                <i className="bi bi-trash3"></i>
+              </button>
+            </div>
+
           </li>
         ))}
       </ul>

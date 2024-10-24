@@ -40,6 +40,29 @@ const reducer = (state, action) => {
       return { ...state, currentTime: action.payload };
     case 'SET_TOTAL_TIME':
       return { ...state, totalTime: action.payload };
+    case 'REMOVE_SONG': // Nueva acción para eliminar una canción
+      const newSongs = state.songs.filter((_, index) => index !== action.payload);
+      const newSongTitles = state.songTitles.filter((_, index) => index !== action.payload);
+      
+      // Ajustar el índice de la canción actual y detener la reproducción si es necesario
+      let newIndex = state.currentSongIndex;
+      let newCurrentSong = state.currentSong;
+
+      if (action.payload === state.currentSongIndex) {
+        newCurrentSong = null;
+        newIndex = newSongs.length > 0 ? 0 : -1;
+      } else if (action.payload < state.currentSongIndex) {
+        newIndex = state.currentSongIndex - 1;
+      }
+
+      return {
+        ...state,
+        songs: newSongs,
+        songTitles: newSongTitles,
+        currentSongIndex: newIndex,
+        currentSong: newCurrentSong,
+        isPlaying: false,
+      };
     default:
       return state;
   }
@@ -151,6 +174,13 @@ const useMusicPlayer = () => {
     playSong(prevIndex);
   };
 
+  const handleRemoveSong = (index) => { // Nueva función para eliminar canciones
+    if (state.currentSongIndex === index && state.currentSong) {
+      state.currentSong.stop(); // Detener la canción actual si se elimina
+    }
+    dispatch({ type: 'REMOVE_SONG', payload: index });
+  };
+
   return {
     state,
     dispatch,
@@ -159,6 +189,7 @@ const useMusicPlayer = () => {
     handleFileUpload,
     handleNextSong,
     handlePreviousSong,
+    handleRemoveSong, // Nueva función añadida aquí
     getAudioData,
   };
 };
