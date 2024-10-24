@@ -1,6 +1,7 @@
 import React from 'react';
 import useMusicPlayer from './hooks/useMusicPlayer';
 import SoundVisualizer from './components/SoundVisualizer';
+import MusicImg from './assets/LOGO.png'
 import './App.css';
 
 const App = () => {
@@ -65,7 +66,7 @@ const App = () => {
 
   return (
     <div className="player-container">
-      <h2 className='roboto-regular'>MyMusic <img src="./src/assets/LOGO.png" alt="music logo" /></h2>
+      <h2 className='roboto-regular'>MyMusic <img src={MusicImg} alt="🎧" /></h2>
 
       {/* Título de la canción */}
       <h2 className="current-song-title">{songTitles[currentSongIndex]}</h2>
