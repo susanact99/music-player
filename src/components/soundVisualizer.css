@@ -1,0 +1,45 @@
+/* Estilos para el Visualizador de Sonido */
+.sound-visualizer {
+    width: 100%;
+    height: 40px; /* Ajusta la altura del visualizador */
+    pointer-events: none; /* Permite que los clics pasen a la barra de progreso */
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    overflow: hidden;
+  }
+  
+  .sound-bar {
+    width: 4px; /* Ancho de cada barra */
+    background-color: #1db954; /* Verde Spotify */
+    margin: 0 2px;
+    transition: height 0.1s ease;
+    border-radius: 3px; /* Bordes redondeados para un diseño suave */
+  }
+  
+  /* Efecto visual cuando hay sonido */
+  .sound-bar.active {
+    background-color: #1db954;
+    box-shadow: 0 0 8px rgba(29, 185, 84, 0.6); /* Efecto de resplandor */
+  }
+  
+  /* Efecto visual cuando no hay sonido o barras bajas */
+  .sound-bar.inactive {
+    background-color: #444; /* Color oscuro para barras bajas o en pausa */
+    box-shadow: none;
+  }
+  
+  /* Animaciones para dar vida al visualizador */
+  @keyframes bounce {
+    0%, 100% {
+      transform: scaleY(1);
+    }
+    50% {
+      transform: scaleY(0.5);
+    }
+  }
+  
+  .sound-bar.bouncing {
+    animation: bounce 0.5s infinite;
+  }
+  

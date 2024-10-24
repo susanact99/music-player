@@ -208,3 +208,6 @@ ul li button.active {
   background-color: #555;
 }
 
+.visualizer{
+  width: 100%;
+}

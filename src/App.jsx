@@ -1,12 +1,7 @@
 import React from 'react';
 import useMusicPlayer from './hooks/useMusicPlayer';
+import SoundVisualizer from './components/SoundVisualizer';
 import './App.css';
-
-const formatTime = (seconds) => {
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = Math.floor(seconds % 60);
-  return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
-};
 
 const App = () => {
   const {
@@ -14,14 +9,48 @@ const App = () => {
     dispatch,
     playSong,
     handlePausePlay,
-    handleVolumeClick,
-    handleProgressClick,
     handleFileUpload,
     handleNextSong,
     handlePreviousSong,
+    getAudioData,
   } = useMusicPlayer();
 
-  const { songTitles, currentSongIndex, progress, currentTime, totalTime, volume, isPlaying } = state;
+  const {
+    songTitles,
+    currentSongIndex,
+    progress,
+    isPlaying,
+    currentTime,
+    totalTime,
+    volume,
+  } = state;
+
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+  };
+
+  const handleProgressClick = (e) => {
+    const progressBarWidth = e.target.clientWidth;
+    const offsetX = e.nativeEvent.offsetX;
+    const newProgress = (offsetX / progressBarWidth) * 100;
+    dispatch({ type: 'SET_PROGRESS', payload: newProgress });
+    if (state.currentSong) {
+      const duration = state.currentSong.duration();
+      state.currentSong.seek((newProgress / 100) * duration);
+    }
+  };
+
+  const handleVolumeClick = (e) => {
+    const volumeBarWidth = e.target.clientWidth;
+    const offsetX = e.nativeEvent.offsetX;
+    const newVolume = offsetX / volumeBarWidth;
+    dispatch({ type: 'SET_VOLUME', payload: newVolume });
+    if (state.currentSong) {
+      state.currentSong.volume(newVolume);
+    }
+  };
 
   const getVolumeIcon = () => {
     if (volume === 0) {
@@ -36,9 +65,17 @@ const App = () => {
   return (
     <div className="player-container">
       <h1>MyMusic💚🎧</h1>
+
+      {/* Título de la canción */}
       <h2 className="current-song-title">{songTitles[currentSongIndex]}</h2>
 
-      <div className="progress-bar" onClick={(e) => handleProgressClick(e.nativeEvent.offsetX / e.target.clientWidth * 100)}>
+      <div className='visualizer'>
+        <SoundVisualizer getAudioData={getAudioData} />
+      </div>
+
+
+      {/* Barra de progreso */}
+      <div className="progress-bar" onClick={handleProgressClick}>
         <div className="progress-element">
           <div className="progress-level" style={{ width: `${progress}%` }}></div>
         </div>
@@ -47,13 +84,19 @@ const App = () => {
           <span>{formatTime(totalTime)}</span>
         </div>
       </div>
+
+      {/* Controles de reproducción */}
       <div className="controls">
         <button onClick={handlePreviousSong}><i className="bi bi-rewind-fill"></i></button>
-        <button onClick={handlePausePlay}>{isPlaying ? <i className="bi bi-pause-fill"></i> : <i className="bi bi-play-fill"></i>}</button>
+        <button onClick={handlePausePlay}>
+          {isPlaying ? <i className="bi bi-pause-fill"></i> : <i className="bi bi-play-fill"></i>}
+        </button>
         <button onClick={handleNextSong}><i className="bi bi-fast-forward-fill"></i></button>
       </div>
+
+      {/* Control de volumen */}
       <div className="settings-volume">
-        <div className="volume-control" onClick={(e) => handleVolumeClick(e.nativeEvent.offsetX / e.target.clientWidth)}>
+        <div className="volume-control" onClick={handleVolumeClick}>
           <label><i className={getVolumeIcon()}></i></label>
           <div className="volume-bar">
             <div className="volume-level" style={{ width: `${volume * 100}%` }}></div>
@@ -73,6 +116,7 @@ const App = () => {
         </div>
       </div>
 
+      {/* Subida de archivos */}
       <div className="file-upload">
         <label htmlFor="song-upload" className="file-upload-label">Upload Songs</label>
         <input
@@ -80,11 +124,12 @@ const App = () => {
           type="file"
           multiple
           accept="audio/*"
-          onChange={(e) => handleFileUpload(Array.from(e.target.files))}
+          onChange={handleFileUpload}
           style={{ display: 'none' }}
         />
       </div>
 
+      {/* Lista de canciones */}
       <ul>
         {songTitles.map((title, index) => (
           <li key={index}>

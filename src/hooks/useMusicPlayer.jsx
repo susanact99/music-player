@@ -1,4 +1,4 @@
-import { useReducer, useEffect } from 'react';
+import { useReducer, useEffect, useRef } from 'react';
 import { Howl } from 'howler';
 
 const initialState = {
@@ -19,7 +19,7 @@ const initialState = {
 const reducer = (state, action) => {
   switch (action.type) {
     case 'SET_SONGS':
-      return { ...state, songs: action.payload.songs, songTitles: action.payload.songTitles, currentSongIndex: 0, currentSong: null };
+      return { ...state, songs: action.payload.songs, songTitles: action.payload.songTitles };
     case 'SET_CURRENT_SONG':
       return { ...state, currentSong: action.payload.song, currentSongIndex: action.payload.index };
     case 'TOGGLE_PLAY':
@@ -48,10 +48,16 @@ const reducer = (state, action) => {
 const useMusicPlayer = () => {
   const [state, dispatch] = useReducer(reducer, initialState);
   const { songs, currentSong, currentSongIndex, isPlaying, volume, isLooping, playNextAutomatically, isShuffled } = state;
+  const audioContextRef = useRef(null);
+  const analyserRef = useRef(null);
+  const dataArrayRef = useRef(null);
+  const sourceRef = useRef(null);
 
   useEffect(() => {
     if (currentSong) {
       dispatch({ type: 'SET_TOTAL_TIME', payload: currentSong.duration() });
+
+      setupAudioAnalyser();
 
       const interval = setInterval(() => {
         const seek = currentSong.seek();
@@ -63,6 +69,28 @@ const useMusicPlayer = () => {
       return () => clearInterval(interval);
     }
   }, [currentSong]);
+
+  const setupAudioAnalyser = () => {
+    if (!audioContextRef.current) {
+      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      analyserRef.current = audioContextRef.current.createAnalyser();
+      analyserRef.current.fftSize = 256;
+      dataArrayRef.current = new Uint8Array(analyserRef.current.frequencyBinCount);
+    }
+
+    const source = audioContextRef.current.createMediaElementSource(currentSong._sounds[0]._node);
+    source.connect(analyserRef.current);
+    analyserRef.current.connect(audioContextRef.current.destination);
+    sourceRef.current = source;
+  };
+
+  const getAudioData = () => {
+    if (analyserRef.current && dataArrayRef.current) {
+      analyserRef.current.getByteFrequencyData(dataArrayRef.current);
+      return dataArrayRef.current;
+    }
+    return null;
+  };
 
   const playSong = (index) => {
     if (currentSong) {
@@ -96,33 +124,12 @@ const useMusicPlayer = () => {
     dispatch({ type: 'TOGGLE_PLAY' });
   };
 
-  const handleVolumeClick = (newVolume) => {
-    dispatch({ type: 'SET_VOLUME', payload: newVolume });
-    if (currentSong) {
-      currentSong.volume(newVolume);
-    }
-  };
-
-  const handleProgressClick = (newProgress) => {
-    dispatch({ type: 'SET_PROGRESS', payload: newProgress });
-    if (currentSong) {
-      const duration = currentSong.duration();
-      currentSong.seek((newProgress / 100) * duration);
-    }
-  };
-
-  const handleFileUpload = (files) => {
+  const handleFileUpload = (e) => {
+    const files = Array.from(e.target.files);
     const songPaths = files.map(file => URL.createObjectURL(file));
     const titles = files.map(file => file.name);
     dispatch({ type: 'SET_SONGS', payload: { songs: songPaths, songTitles: titles } });
-
     if (files.length > 0) {
-      // Asegurarse de limpiar cualquier instancia previa de Howl
-      if (currentSong) {
-        currentSong.unload();
-      }
-
-      // Reproducir la primera canción de la nueva lista
       playSong(0);
     }
   };
@@ -149,11 +156,10 @@ const useMusicPlayer = () => {
     dispatch,
     playSong,
     handlePausePlay,
-    handleVolumeClick,
-    handleProgressClick,
     handleFileUpload,
     handleNextSong,
     handlePreviousSong,
+    getAudioData,
   };
 };
 
