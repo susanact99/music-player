@@ -65,7 +65,7 @@ const App = () => {
 
   return (
     <div className="player-container">
-      <h2 className='roboto-regular'>MyMusic <img src="./src/assets/LOGO.webp" alt="music logo" /></h2>
+      <h2 className='roboto-regular'>MyMusic <img src="./src/assets/LOGO.png" alt="music logo" /></h2>
 
       {/* Título de la canción */}
       <h2 className="current-song-title">{songTitles[currentSongIndex]}</h2>
